@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Planets Game</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="A story-driven 3D puzzle adventure across five tiny planets you can walk all the way around.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;700&family=Syncopate:wght@700&display=swap">
+<style>
+/* Layout: one column of colour bands, one per planet, each led by the planet itself turning slowly. */
+:root {
+  color-scheme: dark;
+  --space: #04060d;
+  --ink: #eef3fa;
+  --soft: #bcc8d9;
+  --line: rgba(238, 243, 250, .16);
+  --accent: #9fdc5a;
+  --tone: #04060d;
+  --display: "Syncopate", "Arial Narrow", Arial, sans-serif;
+  --body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  --mono: "DM Mono", Consolas, "Courier New", monospace;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--space); color: var(--ink); font: 400 18px/1.6 var(--body); }
+img { display: block; max-width: 100%; height: auto; }
+h2 { text-transform: uppercase; }
+a { color: inherit; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3, p, figure, dl, dd, blockquote { margin: 0; }
+.wrap { width: 100%; max-width: 1240px; margin-inline: auto; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+.label { font: 500 13px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--soft); }
+
+/* a planet: the frame's black disappears into whatever band it sits on */
+.planet { aspect-ratio: 1; width: 100%; border-radius: 50%; mix-blend-mode: screen; animation: turn 220s linear infinite; }
+@keyframes turn { to { transform: rotate(360deg); } }
+
+.btn { display: inline-flex; align-items: center; min-height: 52px; padding: 12px 24px; font: 700 17px/1.2 var(--body); text-decoration: none; border: 1px solid var(--line); transition: background-color .15s, color .15s, border-color .15s; }
+.btn:hover { border-color: var(--ink); }
+.btn.go { background: var(--accent); border-color: var(--accent); color: #07110a; }
+.btn.go:hover { background: var(--ink); border-color: var(--ink); }
+
+/* opening */
+.hero {
+  position: relative; overflow: hidden; padding-block: clamp(40px, 7vw, 96px);
+  background-color: var(--space);
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 130px 90px, #cfe0ff, transparent),
+    radial-gradient(1.5px 1.5px at 210px 170px, #fff, transparent),
+    radial-gradient(1px 1px at 290px 40px, #ffe9cf, transparent),
+    radial-gradient(1px 1px at 70px 230px, #fff, transparent);
+  background-size: 340px 280px;
+}
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); align-items: center; }
+.hero-copy { display: grid; gap: 28px; min-width: 0; position: relative; z-index: 1; }
+.logo { width: min(520px, 100%); }
+.hero h1 { font: 500 clamp(24px, 3vw, 36px)/1.25 var(--body); text-wrap: balance; max-width: 22em; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-planet { width: min(120%, 720px); justify-self: center; }
+.atlas { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: clamp(32px, 5vw, 64px); list-style: none; padding: 0; }
+.atlas a { display: grid; justify-items: center; gap: 10px; text-decoration: none; }
+.atlas img { width: min(92px, 100%); }
+.atlas span { font: 500 12px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--soft); }
+.atlas a:hover span { color: var(--ink); }
+
+/* trailer */
+.trailer { padding-block: clamp(48px, 7vw, 96px); background: #090d18; }
+.trailer .wrap { display: grid; gap: 20px; }
+.trailer h2 { font: 700 clamp(20px, 2.6vw, 30px)/1.2 var(--display); }
+.screen { position: relative; aspect-ratio: 16 / 9; width: 100%; background: #000; overflow: hidden; }
+.screen iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.screen a { position: absolute; inset: 0; display: grid; place-items: center; text-decoration: none; }
+.screen a img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.play { position: relative; padding: 16px 28px; background: var(--accent); color: #07110a; font: 700 18px/1.2 var(--body); }
+.screen a:hover .play { background: var(--ink); }
+.note { color: var(--soft); font-size: 16px; }
+.note a { color: var(--ink); }
+
+/* worlds */
+.world { background: var(--tone); padding-block: clamp(56px, 8vw, 112px); overflow: hidden; scroll-margin-top: 0; }
+#kepler { --tone: #0c1d10; --accent: #a5e05f; }
+#ambrosia { --tone: #231008; --accent: #ff9a4d; }
+#orion { --tone: #100c38; --accent: #74e6ea; }
+#ledara { --tone: #0e2030; --accent: #bfe6ff; }
+#veyra { --tone: #151a26; --accent: #f1c35b; }
+.world .wrap { display: grid; gap: clamp(32px, 5vw, 56px); }
+.intro { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 5vw, 80px); align-items: center; }
+.world:nth-of-type(even) .intro { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.world:nth-of-type(even) .intro .disc { order: 2; }
+.disc { max-width: 460px; width: 100%; justify-self: center; }
+.say { display: grid; gap: 18px; min-width: 0; }
+.say .label { color: var(--accent); }
+.say h2 { font: 700 clamp(30px, 6.2vw, 72px)/1.05 var(--display); }
+.say h3 { font: 700 clamp(21px, 2.3vw, 27px)/1.25 var(--body); }
+.say p { max-width: 36em; }
+.nova { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 14px; font: 400 16px/1.5 var(--mono); padding-top: 16px; border-top: 1px solid var(--line); max-width: 40em; }
+.nova b { font-weight: 500; color: var(--accent); }
+.marks { font: 400 15px/1.5 var(--mono); color: var(--soft); }
+.marks b { font-weight: 500; color: var(--ink); }
+.frames { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.frames figure { display: grid; gap: 8px; min-width: 0; }
+.frames img { aspect-ratio: 16 / 9; width: 100%; object-fit: cover; }
+.frames figcaption { font: 400 14px/1.4 var(--mono); color: var(--soft); }
+
+/* details */
+.facts { padding-block: clamp(56px, 8vw, 96px); background: #090d18; }
+.facts-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); }
+.facts h2 { font: 700 clamp(18px, 2vw, 24px)/1.2 var(--display); margin-bottom: 20px; }
+.rows { display: grid; }
+.rows div { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 16px; padding-block: 12px; border-top: 1px solid var(--line); }
+.rows dt { font: 500 15px/1.5 var(--mono); color: var(--soft); }
+kbd { font: 500 15px/1.5 var(--mono); }
+
+/* close */
+.close { position: relative; padding-block: clamp(64px, 9vw, 120px); text-align: center; background: var(--space); }
+.close .wrap { display: grid; justify-items: center; gap: 24px; }
+.close blockquote { font: 400 clamp(19px, 2.6vw, 26px)/1.45 var(--mono); max-width: 30em; text-wrap: balance; }
+.close cite { font: 500 14px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--soft); font-style: normal; }
+.close .logo { width: min(340px, 80%); }
+footer { padding-block: 24px; border-top: 1px solid var(--line); color: var(--soft); font-size: 15px; background: var(--space); }
+
+@media (max-width: 820px) {
+  body { font-size: 17px; }
+  .hero-grid, .intro, .world:nth-of-type(even) .intro, .facts-grid { grid-template-columns: minmax(0, 1fr); }
+  .world:nth-of-type(even) .intro .disc { order: 0; }
+  .hero-planet { width: min(86%, 440px); order: -1; }
+  .disc { max-width: 280px; }
+  .frames { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .planet { animation: none; }
+  html { scroll-behavior: auto; }
+  .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <img class="logo" src="img/logo.png" alt="Planets Game" width="885" height="362">
+        <h1>A story-driven 3D puzzle adventure across five tiny planets you can walk all the way around.</h1>
+        <div class="actions">
+          <a class="btn go" href="https://sparks2026.itch.io/planets-game">Download the demo</a>
+          <a class="btn" href="#trailer">Watch the trailer</a>
+        </div>
+        <p class="label">Windows demo · Name your own price · In development</p>
+      </div>
+      <img class="planet hero-planet" src="img/planet-kepler.jpg" alt="Kepler, a small green planet seen from space" width="900" height="900">
+    </div>
+    <ul class="atlas" aria-label="The five planets">
+      <li><a href="#kepler"><img class="planet" src="img/planet-kepler.jpg" alt="" width="900" height="900" loading="lazy"><span>Kepler</span></a></li>
+      <li><a href="#ambrosia"><img class="planet" src="img/planet-ambrosia.jpg" alt="" width="900" height="900" loading="lazy"><span>Ambrosia</span></a></li>
+      <li><a href="#orion"><img class="planet" src="img/planet-orion.jpg" alt="" width="900" height="900" loading="lazy"><span>Orion</span></a></li>
+      <li><a href="#ledara"><img class="planet" src="img/planet-ledara.jpg" alt="" width="900" height="900" loading="lazy"><span>Ledara</span></a></li>
+      <li><a href="#veyra"><img class="planet" src="img/planet-veyra.jpg" alt="" width="900" height="900" loading="lazy"><span>Veyra</span></a></li>
+    </ul>
+  </div>
+</header>
+
+<section class="trailer" id="trailer">
+  <div class="wrap">
+    <h2>Trailer</h2>
+    <div class="screen"><iframe src="https://www.youtube.com/embed/e5gPm8gBsQc?si=Uxtcau8sIGOwfnaR" title="Planets Game trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+    <p class="note">You crash-land with Nova, your ship's AI, and she is fading. Five worlds stand between her and home. <a href="https://www.youtube.com/watch?v=e5gPm8gBsQc">Watch on YouTube</a></p>
+  </div>
+</section>
+
+<main>
+  <section class="world" id="kepler">
+    <div class="wrap">
+      <div class="intro">
+        <img class="planet disc" src="img/planet-kepler.jpg" alt="Kepler from space, green with a dirt road around it" width="900" height="900" loading="lazy">
+        <div class="say">
+          <p class="label">Planet 1 of 5</p>
+          <h2>Kepler</h2>
+          <h3>Repair the ship</h3>
+          <p>A meadow world with your ship wrecked in the grass. Solve line panels from the crash site to the ridge, drive a rover out to lay new cable, and climb a jump course to a panel high above the mushrooms.</p>
+          <p class="marks"><b>Panel symbols</b> Dots, breaks, sun and shade</p>
+          <p class="nova"><b>Nova</b><span>We crashed. The ship is broken, and so am I.</span></p>
+        </div>
+      </div>
+      <div class="frames">
+        <figure><img src="img/kepler-ship.jpg" alt="The astronaut stands on a path near the wrecked yellow ship" width="1280" height="720" loading="lazy"><figcaption>The crash site</figcaption></figure>
+        <figure><img src="img/kepler-deer.jpg" alt="A deer grazing among tall yellow flowers" width="1280" height="720" loading="lazy"><figcaption>Deer in the wildflowers</figcaption></figure>
+        <figure><img src="img/kepler-run.jpg" alt="The astronaut runs along a meadow path with a ringed planet in the sky" width="1280" height="720" loading="lazy"><figcaption>The road around the world</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="world" id="ambrosia">
+    <div class="wrap">
+      <div class="intro">
+        <img class="planet disc" src="img/planet-ambrosia.jpg" alt="Ambrosia from space, dark red with lava pools" width="900" height="900" loading="lazy">
+        <div class="say">
+          <p class="label">Planet 2 of 5</p>
+          <h2>Ambrosia</h2>
+          <h3>Restart the outpost</h3>
+          <p>Lava, steam and a dead outpost. Bring the generator back to life, find answers cracked into the canyon floor at Dustbowl Depot, and pick up a blaster on your way to the crater lock.</p>
+          <p class="marks"><b>Panel symbols</b> Flames</p>
+          <p class="nova"><b>Nova</b><span>Whoever left these panels wanted them solved.</span></p>
+        </div>
+      </div>
+      <div class="frames">
+        <figure><img src="img/ambrosia-vents.jpg" alt="White steam vents rising over lava pools" width="1280" height="720" loading="lazy"><figcaption>Steamvent Flats</figcaption></figure>
+        <figure><img src="img/ambrosia-panel.jpg" alt="A line puzzle panel glowing green on a red plain" width="1280" height="720" loading="lazy"><figcaption>A flame panel</figcaption></figure>
+        <figure><img src="img/ambrosia-depot.jpg" alt="A canyon with a glowing line cracked into its floor" width="1280" height="720" loading="lazy"><figcaption>Dustbowl Depot</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="world" id="orion">
+    <div class="wrap">
+      <div class="intro">
+        <img class="planet disc" src="img/planet-orion.jpg" alt="Orion from space, deep blue and covered in glowing forest" width="900" height="900" loading="lazy">
+        <div class="say">
+          <p class="label">Planet 3 of 5</p>
+          <h2>Orion</h2>
+          <h3>Cure the blight</h3>
+          <p>A night world lit by its own forest. Carry the village's last ember as a lantern, bounce off giant glowcaps, and cure the infected locals with your blaster. It heals them, it doesn't hurt them.</p>
+          <p class="marks"><b>Panel symbols</b> Twin lights, readable only by your lantern</p>
+          <p class="nova"><b>Nova</b><span>Oh, these ones bounce!</span></p>
+        </div>
+      </div>
+      <div class="frames">
+        <figure><img src="img/orion-forest.jpg" alt="A forest of glowing mushrooms and trees at night" width="1280" height="720" loading="lazy"><figcaption>Glowcap Forest</figcaption></figure>
+        <figure><img src="img/orion-bounce.jpg" alt="The astronaut in mid-air above glowing mushrooms" width="1280" height="720" loading="lazy"><figcaption>Bouncing off a glowcap</figcaption></figure>
+        <figure><img src="img/orion-mantis.jpg" alt="A blue chameleon mantis among red coral plants" width="1280" height="720" loading="lazy"><figcaption>A chameleon mantis</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="world" id="ledara">
+    <div class="wrap">
+      <div class="intro">
+        <img class="planet disc" src="img/planet-ledara.jpg" alt="Ledara from space, an icy moon with a long ridge" width="900" height="900" loading="lazy">
+        <div class="say">
+          <p class="label">Planet 4 of 5</p>
+          <h2>Ledara</h2>
+          <h3>Answer the distress signal</h3>
+          <p>A frozen moon under an aurora. Stay warm, melt the ice, drive the rover across the snow, crack the lever puzzle and outrun the avalanche. Stop by Aurora Cove to meet the penguins.</p>
+          <p class="marks"><b>Puzzle</b> Levers, heat and ice</p>
+          <p class="nova"><b>Nova</b><span>Penguins. Of course there are penguins.</span></p>
+        </div>
+      </div>
+      <div class="frames">
+        <figure><img src="img/ledara-cove.jpg" alt="Penguins around blue crystals in a snowy cove" width="1280" height="720" loading="lazy"><figcaption>Aurora Cove</figcaption></figure>
+        <figure><img src="img/ledara-penguins.jpg" alt="Two penguins standing together" width="1280" height="720" loading="lazy"><figcaption>The locals</figcaption></figure>
+        <figure><img src="img/ledara-avalanche.jpg" alt="The astronaut runs down a snowy slope under the aurora" width="1280" height="720" loading="lazy"><figcaption>Running from the avalanche</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="world" id="veyra">
+    <div class="wrap">
+      <div class="intro">
+        <img class="planet disc" src="img/planet-veyra.jpg" alt="Veyra from space, a dark world with a glass-domed station" width="900" height="900" loading="lazy">
+        <div class="say">
+          <p class="label">Planet 5 of 5</p>
+          <h2>Veyra</h2>
+          <h3>Repair Nova</h3>
+          <p>An old station under glass, and the end of the road. Wake its generator through the garden and the hangar, then face the last panel to bring Nova back.</p>
+          <p class="marks"><b>Panel symbols</b> Every symbol from your journey</p>
+          <p class="nova"><b>Nova</b><span>I'm running on the last of my reserves.</span></p>
+        </div>
+      </div>
+      <div class="frames">
+        <figure><img src="img/veyra-atrium.jpg" alt="A round station hall under a glass dome" width="1280" height="720" loading="lazy"><figcaption>The atrium</figcaption></figure>
+        <figure><img src="img/veyra-garden.jpg" alt="A lush indoor garden on the station" width="1280" height="720" loading="lazy"><figcaption>The station garden</figcaption></figure>
+        <figure><img src="img/veyra-deck.jpg" alt="A tower on the open deck of the station" width="1280" height="720" loading="lazy"><figcaption>Starwatch Deck</figcaption></figure>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="facts">
+  <div class="wrap facts-grid">
+    <div>
+      <h2>The demo</h2>
+      <dl class="rows">
+        <div><dt>Platform</dt><dd>Windows, 199 MB download</dd></div>
+        <div><dt>Price</dt><dd>Name your own price</dd></div>
+        <div><dt>Status</dt><dd>Demo, in development</dd></div>
+        <div><dt>Players</dt><dd>Single player</dd></div>
+        <div><dt>Built with</dt><dd>Unity and Blender</dd></div>
+      </dl>
+    </div>
+    <div>
+      <h2>Controls</h2>
+      <dl class="rows">
+        <div><dt><kbd>W A S D</kbd></dt><dd>Move</dd></div>
+        <div><dt><kbd>Mouse</kbd></dt><dd>Look around</dd></div>
+        <div><dt><kbd>Space</kbd></dt><dd>Jump</dd></div>
+        <div><dt><kbd>E</kbd></dt><dd>Interact</dd></div>
+        <div><dt><kbd>Left click</kbd></dt><dd>Fire the blaster</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<section class="close">
+  <div class="wrap">
+    <blockquote>If I go quiet before we land, just keep flying. Promise me.</blockquote>
+    <cite>Nova</cite>
+    <img class="logo" src="img/logo.png" alt="Planets Game" width="885" height="362" loading="lazy">
+    <a class="btn go" href="https://sparks2026.itch.io/planets-game">Download the demo on itch.io</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Planets Game by Sparks. All images are from the game.</div>
+</footer>
+</body>
+</html>
